@@ -182,11 +182,13 @@ func (db *Database) Close() error {
 
 // Has retrieves if a key is present in the key-value store.
 func (db *Database) Has(key []byte) (bool, error) {
+	fmt.Printf("mrjn Has: %x\n", key)
 	return db.db.Has(key, nil)
 }
 
 // Get retrieves the given key if it's present in the key-value store.
 func (db *Database) Get(key []byte) ([]byte, error) {
+	fmt.Printf("mrjn Get: %x\n", key)
 	dat, err := db.db.Get(key, nil)
 	if err != nil {
 		return nil, err
@@ -196,17 +198,20 @@ func (db *Database) Get(key []byte) ([]byte, error) {
 
 // Put inserts the given value into the key-value store.
 func (db *Database) Put(key []byte, value []byte) error {
+	fmt.Printf("mrjn Get: %x Val: %d\n", key, len(value))
 	return db.db.Put(key, value, nil)
 }
 
 // Delete removes the key from the key-value store.
 func (db *Database) Delete(key []byte) error {
+	fmt.Printf("mrjn Delete: %x", key)
 	return db.db.Delete(key, nil)
 }
 
 // NewBatch creates a write-only key-value store that buffers changes to its host
 // database until a final write is called.
 func (db *Database) NewBatch() ethdb.Batch {
+	fmt.Printf("mrjn NewBatch")
 	return &batch{
 		db: db.db,
 		b:  new(leveldb.Batch),
@@ -217,6 +222,7 @@ func (db *Database) NewBatch() ethdb.Batch {
 // of database content with a particular key prefix, starting at a particular
 // initial key (or after, if it does not exist).
 func (db *Database) NewIterator(prefix []byte, start []byte) ethdb.Iterator {
+	fmt.Printf("mrjn NewIterator: %x %x\n", prefix, start)
 	return db.db.NewIterator(bytesPrefixRange(prefix, start), nil)
 }
 
@@ -233,6 +239,7 @@ func (db *Database) Stat(property string) (string, error) {
 // is treated as a key after all keys in the data store. If both is nil then it
 // will compact entire data store.
 func (db *Database) Compact(start []byte, limit []byte) error {
+	fmt.Printf("mrjn Compact: %x %x\n", start, limit)
 	return db.db.CompactRange(util.Range{Start: start, Limit: limit})
 }
 
@@ -454,6 +461,7 @@ type batch struct {
 
 // Put inserts the given value into the batch for later committing.
 func (b *batch) Put(key, value []byte) error {
+	fmt.Printf("mrjn batch.Put: %x %d\n", key, len(value))
 	b.b.Put(key, value)
 	b.size += len(key) + len(value)
 	return nil
@@ -461,6 +469,7 @@ func (b *batch) Put(key, value []byte) error {
 
 // Delete inserts the a key removal into the batch for later committing.
 func (b *batch) Delete(key []byte) error {
+	fmt.Printf("mrjn batch.Delete: %x\n", key)
 	b.b.Delete(key)
 	b.size += len(key)
 	return nil
@@ -473,11 +482,13 @@ func (b *batch) ValueSize() int {
 
 // Write flushes any accumulated data to disk.
 func (b *batch) Write() error {
+	fmt.Printf("mrjn batch.Write: %d\n", b.size)
 	return b.db.Write(b.b, nil)
 }
 
 // Reset resets the batch for reuse.
 func (b *batch) Reset() {
+	fmt.Printf("mrjn batch.Reset\n")
 	b.b.Reset()
 	b.size = 0
 }
@@ -495,6 +506,7 @@ type replayer struct {
 
 // Put inserts the given value into the key-value data store.
 func (r *replayer) Put(key, value []byte) {
+	fmt.Printf("mrjn replayer.Put: %x %d\n", key, len(value))
 	// If the replay already failed, stop executing ops
 	if r.failure != nil {
 		return
@@ -504,6 +516,7 @@ func (r *replayer) Put(key, value []byte) {
 
 // Delete removes the key from the key-value data store.
 func (r *replayer) Delete(key []byte) {
+	fmt.Printf("mrjn replayer.Delete: %x\n", key)
 	// If the replay already failed, stop executing ops
 	if r.failure != nil {
 		return
