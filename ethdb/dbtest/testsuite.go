@@ -18,6 +18,7 @@ package dbtest
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"sort"
 	"testing"
@@ -125,6 +126,7 @@ func TestDatabaseSuite(t *testing.T, New func() ethdb.KeyValueStore) {
 				t.Errorf("test %d: iteration terminated prematurely: have %d, want %d", i, idx, len(tt.order))
 			}
 			db.Close()
+			fmt.Printf("Test %d done\n", i)
 		}
 	})
 
